@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resumes</title>
+<meta name="description" content="View and download my resumes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --text:#14171c; --muted:#5d6673; --line:#e3e6eb;
+    --accent:#0f6e5a; --accent-soft:#e3f2ee; --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1115; --card:#171a20; --text:#e9ecf1; --muted:#9aa3af; --line:#272c34;
+      --accent:#4cc3a5; --accent-soft:#16302a; --shadow:none; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+  a{color:var(--accent)}
+  .wrap{max-width:880px;margin:0 auto;padding:56px 16px 64px}
+
+  header h1{font-size:clamp(28px,6vw,40px);margin:0 0 4px;letter-spacing:-.02em}
+  header p{margin:0;color:var(--muted)}
+  .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+    border:1px solid var(--line);background:var(--card);color:var(--text);text-decoration:none;
+    font:inherit;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{opacity:.9;color:#fff}
+  @media (prefers-color-scheme: dark){ .btn.primary,.btn.primary:hover{color:#0f1115} }
+
+  .section-label{margin:40px 0 0;font-size:13px;font-weight:600;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;
+    box-shadow:var(--shadow);cursor:pointer;text-align:left;font:inherit;color:inherit;
+    display:flex;flex-direction:column;gap:8px;transition:transform .15s,border-color .15s}
+  .card:hover,.card:focus-visible{transform:translateY(-2px);border-color:var(--accent);outline:none}
+  .tag{align-self:flex-start;font-size:12px;font-weight:600;color:var(--accent);
+    background:var(--accent-soft);padding:3px 10px;border-radius:999px}
+  .card h2{font-size:18px;margin:4px 0 0;line-height:1.3}
+  .card p{margin:0;color:var(--muted);font-size:14px;flex:1}
+  .card .meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);
+    padding-top:10px;border-top:1px solid var(--line);margin-top:6px}
+  .card .meta span:last-child{color:var(--accent);font-weight:600}
+  footer{margin-top:48px;font-size:13px;color:var(--muted)}
+
+  /* Viewer */
+  .viewer{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:10}
+  .viewer.open{display:flex}
+  .bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+  .bar h3{flex:1;min-width:0;margin:0 4px;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pages{flex:1;overflow:auto;padding:20px 16px 40px;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .page{position:relative;width:100%;max-width:850px;background:#fff;border-radius:4px;
+    box-shadow:0 2px 14px rgba(0,0,0,.14);overflow:hidden}
+  .page canvas{display:block;width:100%;height:auto}
+  .page a.pdf-link{position:absolute;display:block}
+  .status{color:var(--muted);padding:48px 16px;text-align:center}
+  @media (max-width:520px){ .hide-sm{display:none} }
+
+  /* QR modal */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;
+    justify-content:center;z-index:20;padding:16px}
+  .modal.open{display:flex}
+  .box{background:var(--card);border-radius:16px;padding:24px;text-align:center;max-width:340px;width:100%}
+  .box h4{margin:0 0 4px;font-size:18px}
+  .box .url{font-size:12px;color:var(--muted);word-break:break-all;margin:0 0 16px}
+  #qr{background:#fff;padding:14px;border-radius:10px;display:inline-block}
+  #qr img,#qr canvas{display:block;width:220px;height:220px}
+  .box .actions{display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<script>
+/* ============================================================
+   EDIT THIS BLOCK — everything on the page comes from here.
+   Put your PDFs in the "resumes" folder with matching names.
+   ============================================================ */
+const SITE = {
+  name: "Your Name",
+  tagline: "Chemical Engineering · University of Waterloo",
+  links: [
+    { label: "Portfolio", url: "https://YOUR-USERNAME.github.io" },
+    { label: "LinkedIn",  url: "https://www.linkedin.com/in/YOUR-HANDLE" },
+    { label: "Email",     url: "mailto:you@example.com" }
+  ],
+  resumes: [
+    {
+      id: "automation",                       // used in the link: …/resume/#automation
+      tag: "Automation",
+      title: "Automation & Controls",
+      blurb: "PLC/DCS, process control, and controls engineering roles.",
+      file: "resumes/automation.pdf",
+      updated: "Nov 2026"
+    },
+    {
+      id: "process",
+      tag: "Process",
+      title: "Process & Manufacturing Engineering",
+      blurb: "Process, manufacturing, and continuous-improvement roles.",
+      file: "resumes/process.pdf",
+      updated: "Nov 2026"
+    },
+    {
+      id: "software",
+      tag: "Software / ML",
+      title: "Software & Machine Learning",
+      blurb: "Software engineering, ML engineering, and data roles.",
+      file: "resumes/software.pdf",
+      updated: "Nov 2026"
+    }
+  ]
+};
+</script>
+
+<div class="wrap">
+  <header>
+    <h1 id="name"></h1>
+    <p id="tagline"></p>
+    <div class="links" id="links"></div>
+  </header>
+
+  <p class="section-label">Resumes</p>
+  <div class="grid" id="grid"></div>
+
+  <footer>Tap a resume to view it, or download the PDF.</footer>
+</div>
+
+<!-- Resume viewer -->
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="v-title">
+  <div class="bar">
+    <button class="btn" id="v-back" aria-label="Back to all resumes">← <span class="hide-sm">All resumes</span></button>
+    <h3 id="v-title"></h3>
+    <button class="btn" id="v-qr" aria-label="QR code for this resume">QR</button>
+    <a class="btn hide-sm" id="v-open" target="_blank" rel="noopener">Open PDF</a>
+    <a class="btn primary" id="v-dl" download>Download</a>
+  </div>
+  <div class="pages" id="pages"></div>
+</div>
+
+<!-- QR modal -->
+<div class="modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+  <div class="box">
+    <h4 id="qr-title">Scan to view</h4>
+    <p class="url" id="qr-url"></p>
+    <div id="qr"></div>
+    <div class="actions">
+      <button class="btn primary" id="qr-dl">Download PNG</button>
+      <button class="btn" id="qr-copy">Copy link</button>
+      <button class="btn" id="qr-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const baseURL = () => location.origin + location.pathname;
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  /* ---------- Home page ---------- */
+  document.title = SITE.name + " · Resumes";
+  $("#name").textContent = SITE.name;
+  $("#tagline").textContent = SITE.tagline;
+
+  const links = $("#links");
+  links.innerHTML = SITE.links.filter((l) => l.url)
+    .map((l) => `<a class="btn" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`)
+    .join("") + `<button class="btn primary" id="site-qr">QR code</button>`;
+  $("#site-qr").onclick = () => showQR(baseURL(), "Scan to see my resumes", "resumes-qr.png");
+
+  $("#grid").innerHTML = SITE.resumes.map((r) => `
+    <button class="card" data-id="${esc(r.id)}">
+      <span class="tag">${esc(r.tag)}</span>
+      <h2>${esc(r.title)}</h2>
+      <p>${esc(r.blurb)}</p>
+      <div class="meta"><span>Updated ${esc(r.updated)}</span><span>View →</span></div>
+    </button>`).join("");
+  document.querySelectorAll(".card").forEach((c) => (c.onclick = () => openResume(c.dataset.id, true)));
+
+  /* ---------- Viewer ---------- */
+  let token = 0, pushed = false, current = null;
+
+  async function openResume(id, push) {
+    const r = SITE.resumes.find((x) => x.id === id);
+    if (!r) return closeViewer();
+    current = r;
+    if (push) { history.pushState({ id }, "", "#" + id); pushed = true; }
+
+    $("#v-title").textContent = r.title;
+    $("#v-dl").href = r.file;
+    $("#v-open").href = r.file;
+    $("#viewer").classList.add("open");
+    document.body.style.overflow = "hidden";
+
+    const pages = $("#pages");
+    pages.scrollTop = 0;
+    pages.innerHTML = `<div class="status">Loading…</div>`;
+    const my = ++token;
+
+    try {
+      if (!window.pdfjsLib) throw new Error("PDF viewer unavailable");
+      const pdf = await pdfjsLib.getDocument(r.file).promise;
+      if (my !== token) return;
+      pages.innerHTML = "";
+      const cssWidth = Math.min(pages.clientWidth - 32, 850);
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        if (my !== token) return;
+        const base = page.getViewport({ scale: 1 });
+        const cssVp = page.getViewport({ scale: cssWidth / base.width });
+        const vp = page.getViewport({ scale: (cssWidth / base.width) * dpr });
+
+        const wrap = document.createElement("div");
+        wrap.className = "page";
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.floor(vp.width);
+        canvas.height = Math.floor(vp.height);
+        canvas.setAttribute("role", "img");
+        canvas.setAttribute("aria-label", `${r.title}, page ${i} of ${pdf.numPages}`);
+        wrap.appendChild(canvas);
+        pages.appendChild(wrap);
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+
+        // Keep links in the PDF (LinkedIn, GitHub, email) clickable
+        const annots = await page.getAnnotations();
+        annots.filter((a) => a.subtype === "Link" && a.url).forEach((a) => {
+          const [x1, y1, x2, y2] = cssVp.convertToViewportRectangle(a.rect);
+          const link = document.createElement("a");
+          link.className = "pdf-link";
+          link.href = a.url;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.setAttribute("aria-label", a.url);
+          link.style.left = (Math.min(x1, x2) / cssVp.width) * 100 + "%";
+          link.style.top = (Math.min(y1, y2) / cssVp.height) * 100 + "%";
+          link.style.width = (Math.abs(x2 - x1) / cssVp.width) * 100 + "%";
+          link.style.height = (Math.abs(y2 - y1) / cssVp.height) * 100 + "%";
+          wrap.appendChild(link);
+        });
+      }
+    } catch (e) {
+      if (my !== token) return;
+      pages.innerHTML = `<div class="status">This resume couldn't be shown here.<br>
+        <a href="${esc(r.file)}" target="_blank" rel="noopener">Open the PDF instead</a></div>`;
+    }
+  }
+
+  function closeViewer() {
+    token++;
+    current = null;
+    $("#viewer").classList.remove("open");
+    $("#pages").innerHTML = "";
+    document.body.style.overflow = "";
+  }
+
+  $("#v-back").onclick = () => {
+    if (pushed) history.back();
+    else { history.replaceState(null, "", location.pathname); closeViewer(); }
+  };
+  $("#v-qr").onclick = () => current &&
+    showQR(baseURL() + "#" + current.id, current.title, `resume-${current.id}-qr.png`);
+
+  window.addEventListener("popstate", () => {
+    const id = location.hash.slice(1);
+    pushed = false;
+    if (id) openResume(id, false); else closeViewer();
+  });
+
+  /* ---------- QR codes ---------- */
+  let qrURL = "", qrFile = "";
+  function showQR(url, title, filename) {
+    qrURL = url; qrFile = filename;
+    $("#qr-title").textContent = title;
+    $("#qr-url").textContent = url;
+    const box = $("#qr");
+    box.innerHTML = "";
+    if (!window.QRCode) { box.textContent = "QR generator failed to load."; }
+    else new QRCode(box, { text: url, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M });
+    $("#qr-modal").classList.add("open");
+  }
+  function closeQR() { $("#qr-modal").classList.remove("open"); }
+
+  $("#qr-close").onclick = closeQR;
+  $("#qr-modal").onclick = (e) => { if (e.target.id === "qr-modal") closeQR(); };
+  $("#qr-copy").onclick = async () => {
+    try { await navigator.clipboard.writeText(qrURL); $("#qr-copy").textContent = "Copied!"; }
+    catch { $("#qr-copy").textContent = "Copy failed"; }
+    setTimeout(() => ($("#qr-copy").textContent = "Copy link"), 1500);
+  };
+  $("#qr-dl").onclick = () => {
+    const src = $("#qr canvas");
+    if (!src) return;
+    const pad = 48, out = document.createElement("canvas");
+    out.width = src.width + pad * 2; out.height = src.height + pad * 2;
+    const ctx = out.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(src, pad, pad);
+    const a = document.createElement("a");
+    a.href = out.toDataURL("image/png"); a.download = qrFile; a.click();
+  };
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if ($("#qr-modal").classList.contains("open")) closeQR();
+    else if ($("#viewer").classList.contains("open")) $("#v-back").click();
+  });
+
+  /* Open straight to a resume if the link has #id */
+  const startId = location.hash.slice(1);
+  if (startId) openResume(startId, false);
+})();
+</script>
+</body>
+</html>
